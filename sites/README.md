@@ -16,6 +16,6 @@ The affiliate destination and bingame promo code are preserved across all sites.
 
 ## Editing
 
-`content.json` stores the separately authored English and Hindi texts and site metadata. `python3 sites/build.py` from the repository root regenerates the three folders and ZIPs using the original root layout/runtime. Back up direct edits in generated folders before rebuilding. No package installation is needed.
+`content.json` stores the site metadata and initial editorial copy. `expanded.py` defines the expanded H1/H2/H3 structure, English/Hindi topic explanations and site-specific heading variants. Each site has 1 H1, 11 H2 and 33 H3 headings, with at least 600 characters of explanatory copy directly below each heading. A section navigation menu helps readers move through the long page. `python3 sites/build.py` from the repository root regenerates the three folders and ZIPs using the original root layout/runtime. Back up direct edits in generated folders before rebuilding. No package installation is needed.
 
 Validation: JavaScript syntax, all section lengths, uniqueness across sites, static metadata, local HTTP responses and script-driven language/link/clipboard handlers. A real-browser layout check remains unrun because Chromium downloads are blocked by the environment network policy.
