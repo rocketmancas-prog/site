@@ -2,6 +2,7 @@
 import json,re,html,zipfile,shutil
 from pathlib import Path
 from expanded import build_content,markup,CSS
+from design import apply_design,CSS as DESIGN_CSS
 root=Path(__file__).resolve().parent.parent
 sites=json.loads((root/'sites/content.json').read_text())
 source=(root/'app.js').read_text()
@@ -9,7 +10,7 @@ runtime=source[source.index('const labels='):]
 for domain,site in sites.items():
     out=root/'sites'/domain
     out.mkdir(exist_ok=True)
-    for asset in ("favicon.svg","favicon.ico","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","site.webmanifest"):
+    for asset in ("favicon.svg","favicon.ico","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","site.webmanifest","hero-trader.png"):
         shutil.copy2(root/asset,out/asset)
     data=build_content(domain,site)
     for lang,sections in data.items():
@@ -18,7 +19,7 @@ for domain,site in sites.items():
             sections[section]=[title,[text]]
     script=source[:source.index('const content=')]+'const content='+json.dumps(data,ensure_ascii=False)+';\n'
     script+='const siteMeta='+json.dumps({'en':{'title':site['enTitle'],'description':site['enDescription']},'hi':{'title':site['hiTitle'],'description':site['hiDescription']}},ensure_ascii=False)+';\n'
-    script+=runtime
+    script+=runtime.replace(' ↗','')
     script=re.sub(r"document.title=lang==='hi'\?.*?;document.querySelector\('meta\[name=\"description\"\]'\).content=lang==='hi'\?.*?;try",'document.title=siteMeta[lang].title;document.querySelector(\'meta[name="description"]\').content=siteMeta[lang].description;try',script)
     assert 'document.title=siteMeta' in script
     (out/'app.js').write_text(script)
@@ -26,6 +27,8 @@ for domain,site in sites.items():
     start=page.index('<section class="content-section"')
     end=page.index('</main>',start)
     page=page[:start]+markup()+page[end:]
+    page=apply_design(page).replace(" ↗", "")
+    page=page.replace('<span class="brand-icon">↗</span>', '<span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 26 16 6h11L16 26Z" fill="currentColor"/></svg></span>')
     page=re.sub(r'<title>.*?</title>','<title>'+html.escape(site['enTitle'])+'</title>',page)
     page=re.sub(r'<meta name="description" content="[^"]*">','<meta name="description" content="'+html.escape(site['enDescription'],quote=True)+'">',page)
     seo=f'<link rel="canonical" href="https://{domain}/"><meta property="og:type" content="website"><meta property="og:site_name" content="{site["name"]}"><meta property="og:title" content="{html.escape(site["enTitle"],quote=True)}"><meta property="og:description" content="{html.escape(site["enDescription"],quote=True)}"><meta property="og:url" content="https://{domain}/"><meta property="og:locale" content="en_IN">'
@@ -43,7 +46,7 @@ for domain,site in sites.items():
     (out/'index.html').write_text(page)
     css=(root/'style.css').read_text().replace('--green:#36e5a0','--green:'+site['accent'])
     css+='\n.site-label{font:600 9px Arial,sans-serif;text-transform:uppercase;letter-spacing:1.5px;margin-left:10px;color:var(--green);border-left:1px solid var(--line);padding-left:10px}\n'
-    (out/'style.css').write_text(css+CSS)
+    (out/'style.css').write_text(css+CSS+DESIGN_CSS)
     (out/'robots.txt').write_text(f'User-agent: *\nAllow: /\nSitemap: https://{domain}/sitemap.xml\n')
     (out/'sitemap.xml').write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://{domain}/</loc></url></urlset>\n')
     with zipfile.ZipFile(root/'sites'/f'{domain}.zip','w',zipfile.ZIP_DEFLATED) as archive:

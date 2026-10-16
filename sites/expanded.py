@@ -138,7 +138,7 @@ VARIANTS={
 
 def build_content(domain, original):
     variant=VARIANTS[domain]
-    data={lang:{'hero':[variant['hero'][i],original[lang]['hero'][1]]} for i,lang in enumerate(('en','hi'))}
+    data={lang:{'hero':[variant['hero'][i].replace('Quotex','<em>Quotex</em>',1),original[lang]['hero'][1]]} for i,lang in enumerate(('en','hi'))}
     for group,en_group,hi_group,children in GROUPS:
         for i,lang in enumerate(('en','hi')):
             group_title=(en_group,hi_group)[i]
