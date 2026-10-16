@@ -1,5 +1,5 @@
 """Build three independent static sites from the existing layout and authored copy."""
-import json,re,html,zipfile
+import json,re,html,zipfile,shutil
 from pathlib import Path
 root=Path(__file__).resolve().parent.parent
 sites=json.loads((root/'sites/content.json').read_text())
@@ -8,6 +8,8 @@ runtime=source[source.index('const labels='):]
 for domain,site in sites.items():
     out=root/'sites'/domain
     out.mkdir(exist_ok=True)
+    for asset in ("favicon.svg","favicon.ico","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","site.webmanifest"):
+        shutil.copy2(root/asset,out/asset)
     data={lang:site[lang] for lang in ('en','hi')}
     for lang,sections in data.items():
         for section,(title,text) in sections.items():
@@ -43,3 +45,8 @@ for domain,site in sites.items():
     with zipfile.ZipFile(root/'sites'/f'{domain}.zip','w',zipfile.ZIP_DEFLATED) as archive:
         for p in sorted(out.iterdir()): archive.write(p,p.name)
     print(domain,':',[(lang,min(len(v[1][0]) for v in data[lang].values())) for lang in data])
+
+with zipfile.ZipFile(root/"sites/quotex-all-sites.zip","w",zipfile.ZIP_DEFLATED) as archive:
+    for domain in sites:
+        for p in sorted((root/"sites"/domain).iterdir()):
+            if p.is_file(): archive.write(p,domain+"/"+p.name)
